@@ -1,44 +1,101 @@
-import React from 'react'
+import React , { useEffect } from 'react'
+import { auth, provider } from "../firebase"
+import { signInWithPopup } from '@firebase/auth'
+import { useNavigate } from "react-router-dom"
 import styled from 'styled-components'
+import {
+    selectUserName,
+    selectUserPhoto,
+    setUserLogin,
+    setSignOut
+} from '../features/user/userSlice'
+import { useSelector, useDispatch } from 'react-redux'
 
 const Header = () => {
+
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+    const userName = useSelector(selectUserName);
+    const userPhoto = useSelector(selectUserPhoto);
+
+    useEffect(() => {
+        auth.onAuthStateChanged(async (user) => {
+            if(user){
+                dispatch(setUserLogin({
+                    name: user.displayName,
+                    email: user.email,
+                    photo: user.photoURL,
+                }))
+                navigate('/');
+            }
+        })
+    }, [userName])
+
+
+
+    const signIn = () => {
+        signInWithPopup(auth, provider)
+        .then((result) => {
+            let user = result.user
+            dispatch(setUserLogin({
+                name: user.displayName,
+                email: user.email,
+                photo: user.photoURL,
+            }))
+            navigate('/');
+        })
+    }
+
+    const signOut = () => {
+        auth.signOut()
+        .then(()=>{
+            dispatch(setSignOut());
+            navigate('/login');
+        })
+    }    
+
   return (
     <Nav>
         <Logo src="/images/logo.svg" />
-        <NavMenu>
-            <a>
-                <img src="/images/home-icon.svg" alt='home-icon'/>
-                <span>HOME</span>
-            </a>
+        { !userName ? ( 
 
-            <a>
-                <img src="/images/search-icon.svg" alt='home-icon'/>
-                <span>SEARCH</span>
-            </a>
+            <Login onClick={signIn}>LOGIN</Login> ):
+            <>
+                <NavMenu>
+                    <a href='/'>
+                        <img src='/images/home-icon.svg' alt='home' />
+                        <span>HOME</span>
+                    </a>
 
-            <a>
-                <img src="/images/watchlist-icon.svg" alt='home-icon'/>
-                <span>WATCHLIST</span>
-            </a>
+                    <a href='/'>
+                        <img src='/images/search-icon.svg' alt='search' />
+                        <span>SEARCH</span>
+                    </a>
 
-            <a>
-                <img src="/images/original-icon.svg" alt='home-icon'/>
-                <span>ORIGINALS</span>
-            </a>
-            
-            <a>
-                <img src="/images/movie-icon.svg" alt='home-icon'/>
-                <span>MOVIES</span>
-            </a>
-            
-            <a>
-                <img src="/images/series-icon.svg" alt='home-icon'/>
-                <span>SERIES</span>
-            </a>
+                    <a href='/'>
+                        <img src='/images/watchlist-icon.svg' alt='watchlist' />
+                        <span>WATCHLIST</span>
+                    </a>
 
-        </NavMenu>
+                    <a href='/'>
+                        <img src='/images/original-icon.svg' alt='originals' />
+                        <span>ORIGINALS</span>
+                    </a>
 
-        <UserImg src='https://avatars.githubusercontent.com/u/77185999?s=96&v=4' alt='user-img' />
+                    <a href='/'>
+                        <img src='/images/movie-icon.svg' alt='movies' />
+                        <span>MOVIES</span>
+                    </a>
+
+                    <a href='/'>
+                        <img src='/images/series-icon.svg' alt='series' />
+                        <span>SERIES</span>
+                    </a>
+                </NavMenu>
+                
+                <UserImg src={userPhoto} onClick={signOut} />
+            </>
+        }
     </Nav>
   )
 }
@@ -50,8 +107,10 @@ const Nav = styled.nav`
     background: #090b13;
     display: flex;
     align-items: center;
+    justify-content:space-between;
     padding: 0 36px;
     overflow-x: hidden;
+
 `
 
 const Logo = styled.img`
@@ -69,6 +128,8 @@ const NavMenu =styled.div`
         align-items: center;
         padding: 0 12px;
         cursor: pointer;
+        text-decoration: none;
+        color: white;
 
         img {
             height: 20px;
@@ -108,4 +169,19 @@ const UserImg = styled.img`
     height: 48px;
     border-radius: 50%;
     cursor: pointer;
+`
+const Login = styled.div`
+    border: 1px solid #f9f9f9;
+    border-radius: 5px;
+    padding: 6px 16px;
+    letter-spacing: 1.5px;
+    background-color: rgba(0, 0, 0, 0.6);
+    transition: all 0.2s ease 0s;
+    cursor: pointer;
+
+    &:hover {
+        background-color: white;
+        color: black;
+        border-color: transparent;
+    }
 `

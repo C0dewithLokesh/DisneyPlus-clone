@@ -1,39 +1,75 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import styled from 'styled-components'
+import { useParams } from 'react-router-dom'
+import db from '../firebase'
+import { collection, getDocs } from "firebase/firestore";
 
 const Detail = () => {
+    const { id } = useParams();
+    const [ movie, setMovie ] = useState({})
+
+    const fetchMovie = async (ID)=>{
+        try{
+                const querySnapshot = await getDocs(collection(db, "movies"));
+                querySnapshot.forEach(doc => {
+                    if(doc.id === ID){
+                        return setMovie((doc.data()));
+                    }
+                });
+        }catch(error){
+            alert(error.message)
+        }
+    };
+
+    useEffect(() => {
+        fetchMovie(id);
+
+        return () => {
+            setMovie({});
+          };
+
+    }, [id])
+
+    console.log(movie)
+
   return (
     <Container>
-        <Background>
-            <img src="https://img1.hotstarext.com/image/upload/f_auto,t_web_m_1x/sources/r1/cms/prod/4294/754294-h" alt="" />
-        </Background>
+        {
+            movie && (
+                <>
+                    <Background>
+                        <img src={movie.backgroundImg} alt="" />
+                    </Background>
 
-        <ImageTitle>
-            <img src="" alt="" />
-        </ImageTitle>
+                    <ImageTitle>
+                        <img src={movie.titleImg} alt="" />
+                    </ImageTitle>
 
-        <Controls>
-            <PlayButton>
-                <img src="/images/play-icon-black.png" alt="" />
-                <span>Play</span>
-            </PlayButton>
-            <TrailerButton>
-            <img src="/images/play-icon-white.png" alt="" />
-            <span>Trailer</span>
-            </TrailerButton>
-            <AddButton>
-                <span>+</span>
-            </AddButton>
-            <GroupWatchButton>
-                <img src="/images/group-icon.png" alt="" />
-            </GroupWatchButton>
-        </Controls>
-        <SubTitle>
-        2 hr 8 min2019Science FictionU/A 16+
-        </SubTitle>
-        <Description>
-            Lorem ipsum dolor sit amet consectetur adipisicing elit. Et tenetur culpa magni, voluptates eius, iste aperiam aspernatur velit recusandae ullam exercitationem reprehenderit accusantium explicabo veniam dolores deleniti adipisci totam temporibus.
-        </Description>
+                    <Controls>
+                        <PlayButton>
+                            <img src="/images/play-icon-black.png" alt="" />
+                            <span>Play</span>
+                        </PlayButton>
+                        <TrailerButton>
+                        <img src="/images/play-icon-white.png" alt="" />
+                        <span>Trailer</span>
+                        </TrailerButton>
+                        <AddButton>
+                            <span>+</span>
+                        </AddButton>
+                        <GroupWatchButton>
+                            <img src="/images/group-icon.png" alt="" />
+                        </GroupWatchButton>
+                    </Controls>
+                    <SubTitle>
+                        {movie.subTitle}
+                    </SubTitle>
+                    <Description>
+                        {movie.description}
+                    </Description>
+                </>
+            )
+        }
     </Container>
   )
 }
@@ -42,7 +78,7 @@ export default Detail
 
 const Container = styled.div`
     min-height: calc(100vh - 70px);
-    padding: 0 calc(3.5vw - 5px);
+    padding: 0 calc(3.5vw + 5px);
     position: relative;
 ` 
 const Background = styled.div`
@@ -52,7 +88,7 @@ const Background = styled.div`
     bottom: 0; 
     right: 0; 
     z-index: -1;
-    oapacity: 0.8;
+    oapacity: 0.7;
 
     img {
         width: 100%;
@@ -66,11 +102,13 @@ const ImageTitle = styled.div`
     width: 35vw;
     min-width: 200px;
     margin-top: 60px;
+    margin-bottom: 10px;
+    left: 0;
 
     img {
         width: 100%;
         height : 100%;
-        object-fit: cover;
+        object-fit: contain;
     }
 `
 
